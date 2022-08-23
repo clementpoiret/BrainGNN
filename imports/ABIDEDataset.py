@@ -1,5 +1,5 @@
 import torch
-from torch_geometric.data import InMemoryDataset,Data
+from torch_geometric.data import InMemoryDataset, Data
 from os.path import join, isfile
 from os import listdir
 import numpy as np
@@ -8,21 +8,25 @@ from imports.read_abide_stats_parall import read_data
 
 
 class ABIDEDataset(InMemoryDataset):
+
     def __init__(self, root, name, transform=None, pre_transform=None):
         self.root = root
         self.name = name
-        super(ABIDEDataset, self).__init__(root,transform, pre_transform)
+        super(ABIDEDataset, self).__init__(root, transform, pre_transform)
         self.data, self.slices = torch.load(self.processed_paths[0])
 
     @property
     def raw_file_names(self):
-        data_dir = osp.join(self.root,'raw')
-        onlyfiles = [f for f in listdir(data_dir) if osp.isfile(osp.join(data_dir, f))]
+        data_dir = osp.join(self.root, 'raw')
+        onlyfiles = [
+            f for f in listdir(data_dir) if osp.isfile(osp.join(data_dir, f))
+        ]
         onlyfiles.sort()
         return onlyfiles
+
     @property
     def processed_file_names(self):
-        return  'data.pt'
+        return 'data.pt'
 
     def download(self):
         # Download to `self.raw_dir`.

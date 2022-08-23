@@ -55,7 +55,9 @@ def cat(seq):
     seq = [item.unsqueeze(-1) if item.dim() == 1 else item for item in seq]
     return torch.cat(seq, dim=-1).squeeze() if len(seq) > 0 else None
 
+
 class NoDaemonProcess(multiprocessing.Process):
+
     @property
     def daemon(self):
         return False
@@ -70,12 +72,14 @@ class NoDaemonContext(type(multiprocessing.get_context())):
 
 
 def read_data(data_dir):
-    onlyfiles = [f for f in listdir(data_dir) if osp.isfile(osp.join(data_dir, f))]
+    onlyfiles = [
+        f for f in listdir(data_dir) if osp.isfile(osp.join(data_dir, f))
+    ]
     onlyfiles.sort()
     batch = []
     pseudo = []
     y_list = []
-    edge_att_list, edge_index_list,att_list = [], [], []
+    edge_att_list, edge_index_list, att_list = [], [], []
 
     # parallar computing
     cores = multiprocessing.cpu_count()
@@ -96,14 +100,12 @@ def read_data(data_dir):
 
     print('Time: ', stop - start)
 
-
-
     for j in range(len(res)):
         edge_att_list.append(res[j][0])
-        edge_index_list.append(res[j][1]+j*res[j][4])
+        edge_index_list.append(res[j][1] + j * res[j][4])
         att_list.append(res[j][2])
         y_list.append(res[j][3])
-        batch.append([j]*res[j][4])
+        batch.append([j] * res[j][4])
         pseudo.append(np.diag(np.ones(res[j][4])))
 
     edge_att_arr = np.concatenate(edge_att_list)
@@ -111,21 +113,25 @@ def read_data(data_dir):
     att_arr = np.concatenate(att_list, axis=0)
     pseudo_arr = np.concatenate(pseudo, axis=0)
     y_arr = np.stack(y_list)
-    edge_att_torch = torch.from_numpy(edge_att_arr.reshape(len(edge_att_arr), 1)).float()
+    edge_att_torch = torch.from_numpy(edge_att_arr.reshape(
+        len(edge_att_arr), 1)).float()
     att_torch = torch.from_numpy(att_arr).float()
     y_torch = torch.from_numpy(y_arr).long()  # classification
     batch_torch = torch.from_numpy(np.hstack(batch)).long()
     edge_index_torch = torch.from_numpy(edge_index_arr).long()
     pseudo_torch = torch.from_numpy(pseudo_arr).float()
-    data = Data(x=att_torch, edge_index=edge_index_torch, y=y_torch, edge_attr=edge_att_torch, pos = pseudo_torch )
-
+    data = Data(x=att_torch,
+                edge_index=edge_index_torch,
+                y=y_torch,
+                edge_attr=edge_att_torch,
+                pos=pseudo_torch)
 
     data, slices = split(data, batch_torch)
 
     return data, slices
 
 
-def read_sigle_data(data_dir,filename,use_gdc =False):
+def read_sigle_data(data_dir, filename, use_gdc=False):
 
     temp = dd.io.load(osp.join(data_dir, filename))
 
@@ -141,41 +147,42 @@ def read_sigle_data(data_dir,filename,use_gdc =False):
         edge_att[i] = pcorr[adj.row[i], adj.col[i]]
 
     edge_index = np.stack([adj.row, adj.col])
-    edge_index, edge_att = remove_self_loops(torch.from_numpy(edge_index), torch.from_numpy(edge_att))
+    edge_index, edge_att = remove_self_loops(torch.from_numpy(edge_index),
+                                             torch.from_numpy(edge_att))
     edge_index = edge_index.long()
-    edge_index, edge_att = coalesce(edge_index, edge_att, num_nodes,
-                                    num_nodes)
+    edge_index, edge_att = coalesce(edge_index, edge_att, num_nodes, num_nodes)
     att = temp['corr'][()]
     label = temp['label'][()]
 
     att_torch = torch.from_numpy(att).float()
     y_torch = torch.from_numpy(np.array(label)).long()  # classification
 
-    data = Data(x=att_torch, edge_index=edge_index.long(), y=y_torch, edge_attr=edge_att)
+    data = Data(x=att_torch,
+                edge_index=edge_index.long(),
+                y=y_torch,
+                edge_attr=edge_att)
 
     if use_gdc:
         '''
         Implementation of https://papers.nips.cc/paper/2019/hash/23c894276a2c5a16470e6a31f4618d73-Abstract.html
         '''
         data.edge_attr = data.edge_attr.squeeze()
-        gdc = GDC(self_loop_weight=1, normalization_in='sym',
+        gdc = GDC(self_loop_weight=1,
+                  normalization_in='sym',
                   normalization_out='col',
                   diffusion_kwargs=dict(method='ppr', alpha=0.2),
-                  sparsification_kwargs=dict(method='topk', k=20,
-                                             dim=0), exact=True)
+                  sparsification_kwargs=dict(method='topk', k=20, dim=0),
+                  exact=True)
         data = gdc(data)
-        return data.edge_attr.data.numpy(),data.edge_index.data.numpy(),data.x.data.numpy(),data.y.data.item(),num_nodes
+        return data.edge_attr.data.numpy(), data.edge_index.data.numpy(
+        ), data.x.data.numpy(), data.y.data.item(), num_nodes
 
     else:
-        return edge_att.data.numpy(),edge_index.data.numpy(),att,label,num_nodes
+        return edge_att.data.numpy(), edge_index.data.numpy(
+        ), att, label, num_nodes
+
 
 if __name__ == "__main__":
     data_dir = '/home/azureuser/projects/BrainGNN/data/ABIDE_pcp/cpac/filt_noglobal/raw'
     filename = '50346.h5'
     read_sigle_data(data_dir, filename)
-
-
-
-
-
-

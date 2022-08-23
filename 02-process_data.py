@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 import sys
 import argparse
 import pandas as pd
@@ -26,6 +25,7 @@ import os
 warnings.filterwarnings("ignore")
 root_folder = '/data/'
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
+
 
 # Process boolean command line arguments
 def str2bool(v):
@@ -40,17 +40,28 @@ def str2bool(v):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Classification of the ABIDE dataset using a Ridge classifier. '
-                                                 'MIDA is used to minimize the distribution mismatch between ABIDE sites')
-    parser.add_argument('--atlas', default='cc200',
-                        help='Atlas for network construction (node definition) options: ho, cc200, cc400, default: cc200.')
-    parser.add_argument('--seed', default=123, type=int, help='Seed for random initialisation. default: 1234.')
-    parser.add_argument('--nclass', default=2, type=int, help='Number of classes. default:2')
-
+    parser = argparse.ArgumentParser(
+        description=
+        'Classification of the ABIDE dataset using a Ridge classifier. '
+        'MIDA is used to minimize the distribution mismatch between ABIDE sites'
+    )
+    parser.add_argument(
+        '--atlas',
+        default='cc200',
+        help=
+        'Atlas for network construction (node definition) options: ho, cc200, cc400, default: cc200.'
+    )
+    parser.add_argument('--seed',
+                        default=123,
+                        type=int,
+                        help='Seed for random initialisation. default: 1234.')
+    parser.add_argument('--nclass',
+                        default=2,
+                        type=int,
+                        help='Number of classes. default:2')
 
     args = parser.parse_args()
     print('Arguments: \n', args)
-
 
     params = dict()
 
@@ -71,8 +82,8 @@ def main():
 
     # Initialise variables for class labels and acquisition sites
     # 1 is autism, 2 is control
-    y_data = np.zeros([num_subjects, num_classes]) # n x 2
-    y = np.zeros([num_subjects, 1]) # n x 1
+    y_data = np.zeros([num_subjects, num_classes])  # n x 2
+    y = np.zeros([num_subjects, 1])  # n x 1
 
     # Get class labels for all subjects
     for i in range(num_subjects):
@@ -80,13 +91,24 @@ def main():
         y[i] = int(labels[subject_IDs[i]])
 
     # Compute feature vectors (vectorised connectivity networks)
-    fea_corr = Reader.get_networks(subject_IDs, iter_no='', kind='correlation', atlas_name=atlas) #(1035, 200, 200)
-    fea_pcorr = Reader.get_networks(subject_IDs, iter_no='', kind='partial correlation', atlas_name=atlas) #(1035, 200, 200)
+    fea_corr = Reader.get_networks(subject_IDs,
+                                   iter_no='',
+                                   kind='correlation',
+                                   atlas_name=atlas)  #(1035, 200, 200)
+    fea_pcorr = Reader.get_networks(subject_IDs,
+                                    iter_no='',
+                                    kind='partial correlation',
+                                    atlas_name=atlas)  #(1035, 200, 200)
 
-    if not os.path.exists(os.path.join(data_folder,'raw')):
-        os.makedirs(os.path.join(data_folder,'raw'))
+    if not os.path.exists(os.path.join(data_folder, 'raw')):
+        os.makedirs(os.path.join(data_folder, 'raw'))
     for i, subject in enumerate(subject_IDs):
-        dd.io.save(os.path.join(data_folder,'raw',subject+'.h5'),{'corr':fea_corr[i],'pcorr':fea_pcorr[i],'label':y[i]%2})
+        dd.io.save(os.path.join(data_folder, 'raw', subject + '.h5'), {
+            'corr': fea_corr[i],
+            'pcorr': fea_pcorr[i],
+            'label': y[i] % 2
+        })
+
 
 if __name__ == '__main__':
     main()

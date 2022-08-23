@@ -3,7 +3,7 @@ import inspect
 
 import torch
 # from torch_geometric.utils import scatter_
-from torch_scatter import scatter,scatter_add
+from torch_scatter import scatter, scatter_add
 
 special_args = [
     'edge_index', 'edge_index_i', 'edge_index_j', 'size', 'size_i', 'size_j'
@@ -37,6 +37,7 @@ class MyMessagePassing(torch.nn.Module):
         node_dim (int, optional): The axis along which to propagate.
             (default: :obj:`0`)
     """
+
     def __init__(self, aggr='add', flow='source_to_target', node_dim=0):
         super(MyMessagePassing, self).__init__()
 

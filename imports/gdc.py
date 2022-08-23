@@ -8,6 +8,7 @@ from torch_scatter import scatter_add
 
 
 def jit():
+
     def decorator(func):
         try:
             return numba.jit(cache=True)(func)
@@ -67,11 +68,14 @@ class GDC(object):
             (default: :obj:`True`)
     :rtype: :class:`torch_geometric.data.Data`
     """
-    def __init__(self, self_loop_weight=1, normalization_in='sym',
+
+    def __init__(self,
+                 self_loop_weight=1,
+                 normalization_in='sym',
                  normalization_out='col',
                  diffusion_kwargs=dict(method='ppr', alpha=0.15),
-                 sparsification_kwargs=dict(method='threshold',
-                                            avg_degree=64), exact=True):
+                 sparsification_kwargs=dict(method='threshold', avg_degree=64),
+                 exact=True):
         self.self_loop_weight = self_loop_weight
         self.normalization_in = normalization_in
         self.normalization_out = normalization_out
@@ -96,7 +100,9 @@ class GDC(object):
 
         if self.self_loop_weight:
             edge_index, edge_weight = add_self_loops(
-                edge_index, edge_weight, fill_value=self.self_loop_weight,
+                edge_index,
+                edge_weight,
+                fill_value=self.self_loop_weight,
                 num_nodes=N)
 
         edge_index, edge_weight = coalesce(edge_index, edge_weight, N, N)
@@ -170,8 +176,8 @@ class GDC(object):
 
         return edge_index, edge_weight
 
-    def diffusion_matrix_exact(self, edge_index, edge_weight, num_nodes,
-                               method, **kwargs):
+    def diffusion_matrix_exact(self, edge_index, edge_weight, num_nodes, method,
+                               **kwargs):
         r"""Calculate the (dense) diffusion on a given sparse graph.
         Note that these exact variants are not scalable. They densify the
         adjacency matrix and calculate either its inverse or its matrix
@@ -199,7 +205,8 @@ class GDC(object):
         if method == 'ppr':
             # α (I_n + (α - 1) A)^-1
             edge_weight = (kwargs['alpha'] - 1) * edge_weight
-            edge_index, edge_weight = add_self_loops(edge_index, edge_weight,
+            edge_index, edge_weight = add_self_loops(edge_index,
+                                                     edge_weight,
                                                      fill_value=1,
                                                      num_nodes=num_nodes)
             mat = to_dense_adj(edge_index, edge_attr=edge_weight).squeeze()
@@ -207,7 +214,8 @@ class GDC(object):
 
         elif method == 'heat':
             # exp(t (A - I_n))
-            edge_index, edge_weight = add_self_loops(edge_index, edge_weight,
+            edge_index, edge_weight = add_self_loops(edge_index,
+                                                     edge_weight,
                                                      fill_value=-1,
                                                      num_nodes=num_nodes)
             edge_weight = kwargs['t'] * edge_weight
@@ -267,7 +275,9 @@ class GDC(object):
                 kwargs['eps'])
             ppr_normalization = 'col' if normalization == 'col' else 'row'
             edge_index, edge_weight = self.__neighbors_to_graph__(
-                neighbors, neighbor_weights, ppr_normalization,
+                neighbors,
+                neighbor_weights,
+                ppr_normalization,
                 device=edge_index.device)
             edge_index = edge_index.to(torch.long)
 
@@ -337,19 +347,20 @@ class GDC(object):
 
         elif method == 'topk':
             assert kwargs['dim'] in [0, 1]
-            sort_idx = torch.argsort(matrix, dim=kwargs['dim'],
-                                     descending=True)
+            sort_idx = torch.argsort(matrix, dim=kwargs['dim'], descending=True)
             if kwargs['dim'] == 0:
                 top_idx = sort_idx[:kwargs['k']]
-                edge_weight = torch.gather(matrix, dim=kwargs['dim'],
+                edge_weight = torch.gather(matrix,
+                                           dim=kwargs['dim'],
                                            index=top_idx).flatten()
 
-                row_idx = torch.arange(0, N, device=matrix.device).repeat(
-                    kwargs['k'])
+                row_idx = torch.arange(0, N,
+                                       device=matrix.device).repeat(kwargs['k'])
                 edge_index = torch.stack([top_idx.flatten(), row_idx], dim=0)
             else:
                 top_idx = sort_idx[:, :kwargs['k']]
-                edge_weight = torch.gather(matrix, dim=kwargs['dim'],
+                edge_weight = torch.gather(matrix,
+                                           dim=kwargs['dim'],
                                            index=top_idx).flatten()
 
                 col_idx = torch.arange(
@@ -422,8 +433,11 @@ class GDC(object):
             return -np.inf
         return sorted_edges[avg_degree * num_nodes - 1]
 
-    def __neighbors_to_graph__(self, neighbors, neighbor_weights,
-                               normalization='row', device='cpu'):
+    def __neighbors_to_graph__(self,
+                               neighbors,
+                               neighbor_weights,
+                               normalization='row',
+                               device='cpu'):
         r"""Combine a list of neighbors and neighbor weights to create a sparse
         graph.
         Args:
