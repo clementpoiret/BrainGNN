@@ -6,10 +6,10 @@ import torch
 from torch_scatter import scatter, scatter_add
 
 special_args = [
-    'edge_index', 'edge_index_i', 'edge_index_j', 'size', 'size_i', 'size_j'
+    "edge_index", "edge_index_i", "edge_index_j", "size", "size_i", "size_j"
 ]
-__size_error_msg__ = ('All tensors which should get mapped to the same source '
-                      'or target nodes must be of same size in dimension 0.')
+__size_error_msg__ = ("All tensors which should get mapped to the same source "
+                      "or target nodes must be of same size in dimension 0.")
 
 is_python2 = sys.version_info[0] < 3
 getargspec = inspect.getargspec if is_python2 else inspect.getfullargspec
@@ -38,14 +38,14 @@ class MyMessagePassing(torch.nn.Module):
             (default: :obj:`0`)
     """
 
-    def __init__(self, aggr='add', flow='source_to_target', node_dim=0):
+    def __init__(self, aggr="add", flow="source_to_target", node_dim=0):
         super(MyMessagePassing, self).__init__()
 
         self.aggr = aggr
-        assert self.aggr in ['add', 'mean', 'max']
+        assert self.aggr in ["add", "mean", "max"]
 
         self.flow = flow
-        assert self.flow in ['source_to_target', 'target_to_source']
+        assert self.flow in ["source_to_target", "target_to_source"]
 
         self.node_dim = node_dim
         assert self.node_dim >= 0
@@ -77,7 +77,7 @@ class MyMessagePassing(torch.nn.Module):
         size = [None, None] if size is None else list(size)
         assert len(size) == 2
 
-        i, j = (0, 1) if self.flow == 'target_to_source' else (1, 0)
+        i, j = (0, 1) if self.flow == "target_to_source" else (1, 0)
         ij = {"_i": i, "_j": j}
 
         message_args = []
@@ -113,8 +113,8 @@ class MyMessagePassing(torch.nn.Module):
         size[0] = size[1] if size[0] is None else size[0]
         size[1] = size[0] if size[1] is None else size[1]
 
-        kwargs['edge_index'] = edge_index
-        kwargs['size'] = size
+        kwargs["edge_index"] = edge_index
+        kwargs["size"] = size
 
         for (idx, arg) in self.__special_args__:
             if arg[-2:] in ij.keys():

@@ -18,7 +18,7 @@ class MyNNConv(MyMessagePassing):
                  normalize=False,
                  bias=True,
                  **kwargs):
-        super(MyNNConv, self).__init__(aggr='mean', **kwargs)
+        super(MyNNConv, self).__init__(aggr="mean", **kwargs)
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -29,7 +29,7 @@ class MyNNConv(MyMessagePassing):
         if bias:
             self.bias = Parameter(torch.Tensor(out_channels))
         else:
-            self.register_parameter('bias', None)
+            self.register_parameter("bias", None)
 
         self.reset_parameters()
 
@@ -76,5 +76,4 @@ class MyNNConv(MyMessagePassing):
         return aggr_out
 
     def __repr__(self):
-        return '{}({}, {})'.format(self.__class__.__name__, self.in_channels,
-                                   self.out_channels)
+        return f"{self.__class__.__name__}({self.in_channels}, {self.out_channels})"

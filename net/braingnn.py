@@ -14,14 +14,14 @@ from net.braingraphconv import MyNNConv
 class Network(torch.nn.Module):
 
     def __init__(self, indim, ratio, nclass, k=8, R=200):
-        '''
+        """
 
         :param indim: (int) node feature dimension
         :param ratio: (float) pooling ratio in (0,1)
         :param nclass: (int)  number of classes
         :param k: (int) number of communities
         :param R: (int) number of ROIs
-        '''
+        """
         super(Network, self).__init__()
 
         self.indim = indim
